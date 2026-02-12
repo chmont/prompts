@@ -279,3 +279,142 @@ PUT https://server/gram/{domainCode}/{rootSpk}
 ```
 
 The exact JSON structure varies based on your configured data model - refer to your CLI project configuration for specific entity and attribute definitions .
+
+# Orchestrator Client JSON Payload Structure
+
+The Orchestrator Client submits **JSON payloads** that represent complete entity profiles to the Orchestrator API. Here's what these JSON files look like:
+
+## Basic JSON Payload Structure
+
+**Standard Entity Format** :
+```json
+{
+  "{ModelEntity}": {
+    "SystemId": int,
+    "Spk": string,
+    "RootSpk": string,
+    ...
+  }
+}
+```
+
+**Required Fields for Every Entity** :
+- **SystemId**: Numeric identifier for the source system
+- **Spk**: Source Primary Key (unique identifier)
+- **RootSpk**: Root entity identifier (same as Spk for root entities)
+
+## Complete Profile Example Structure
+
+**Hierarchical Entity Structure** :
+The JSON represents a **complete hierarchical entity structure** that includes the root entity and all child entities. Here's a conceptual example for a Provider profile:
+
+```json
+{
+  "ProvProvider": {
+    "SystemId": 100,
+    "Spk": "SYS100.10M-AA7E15A9043427FE5520D2546B389A7C",
+    "RootSpk": "SYS100.10M-AA7E15A9043427FE5520D2546B389A7C",
+    "FirstName": "John",
+    "LastName": "Smith",
+    "NPI": "1234567890",
+    "Gender": "M",
+    "BirthDate": "1975-01-01",
+    
+    "ProvAddress": [
+      {
+        "SystemId": 100,
+        "Spk": "SYS100.10M-AA7E15A9043427FE5520D2546B389A7C.10J-10B1E049897E117CA591699D8093A9E4",
+        "RootSpk": "SYS100.10M-AA7E15A9043427FE5520D2546B389A7C",
+        "ParentSpk": "SYS100.10M-AA7E15A9043427FE5520D2546B389A7C",
+        "AddressType": "Home",
+        "Address1": "123 Main St",
+        "City": "Anytown",
+        "State": "CA",
+        "ZipCode": "12345"
+      }
+    ],
+    
+    "ProvPhone": [
+      {
+        "SystemId": 100,
+        "Spk": "SYS100.10M-AA7E15A9043427FE5520D2546B389A7C.10K-20B1E049897E117CA591699D8093A9E5",
+        "RootSpk": "SYS100.10M-AA7E15A9043427FE5520D2546B389A7C",
+        "ParentSpk": "SYS100.10M-AA7E15A9043427FE5520D2546B389A7C",
+        "PhoneType": "Office",
+        "PhoneNumber": "555-123-4567"
+      }
+    ]
+  }
+}
+```
+
+## Gram Operations (Partial Updates)
+
+**Add/Update/Delete Operations** :
+For partial profile updates, the JSON structure supports granular operations:
+
+```json
+{
+  "Add": [
+    {
+      "EntityName": "ProvAddress",
+      "RootSpk": "SYS001.AFE32CDFF6B",
+      "Spk": "SYS001.1AFE32CDFF6B.PROV_ADDR999",
+      "ParentSpk": "SYS001.AFE32CDFF6B",
+      "SystemId": 1,
+      "DataAttributes": {
+        "AddressType": "Commercial",
+        "SourceAddressType": "Residential",
+        "AddressMd5": "MD5123456123456",
+        "PrimaryAddressInd": 1
+      }
+    }
+  ],
+  "Update": [
+    {
+      "EntityName": "ProvAddress",
+      "RootSpk": "SYS001.AFE32CDFF6B",
+      "Spk": "SYS001.AFE32CDFF6B.PROV_ADDR999",
+      "DataAttributes": {
+        "AddressType": "Unknown",
+        "SourceAddressType": null,
+        "AddressMd5": null
+      }
+    }
+  ],
+  "Delete": [
+    {
+      "EntityName": "ProvAddress",
+      "Spk": "SYS001.AFE32CDFF6B.PROV_ADDR999"
+    }
+  ]
+}
+```
+
+## Key Characteristics
+
+**JSON Processing** :
+- Data is sent as a **single JSON string** representing a complete payload
+- The **Load Entity Worker** deserializes the JSON into hierarchical structures
+- Payloads must conform to the configured **Orchestrator data model**
+
+**Child Entity Relationships** :
+- Child entities are nested within their parent entities
+- Each child must have proper **ParentSpk** references
+- **RootSpk remains constant** throughout the hierarchy
+- At the root entity level, **Spk and RootSpk are the same value**
+
+**Data Model Dependency** :
+The exact structure varies based on your configured data model. Additional fields depend on:
+- **ModelAttributes**: Defined business attributes
+- **ModelEntity**: Entity relationships and structure
+- **Domain-specific configuration**: Custom fields per domain
+
+The JSON payload structure directly reflects the **Orchestrator Transactional/Relational Model** configuration stored in your Orchestrator database .
+
+Would you like me to:
+1) Show examples of specific domain entity structures
+2) Explain how landing table data gets transformed into these JSON payloads
+3) Detail the validation rules applied to these JSON structures?
+
+
